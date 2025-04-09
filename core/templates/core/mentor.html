@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Дашборд ментора</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+</head>
+<body>
+    <div class="header">
+        <div class="logo-text">
+            <img src="{% static 'images/megalab_logo.png' %}" alt="Megalab Logo">
+            <p>Образовательная платформа Megalab</p>
+        </div>
+        <form method="post" action="{% url 'logout' %}">
+            {% csrf_token %}
+            <button type="submit" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Выйти</button>
+        </form>
+    </div>
+    <i class="fas fa-book background-icon" id="icon1"></i>
+    <i class="fas fa-graduation-cap background-icon" id="icon2"></i>
+    <i class="fas fa-code background-icon" id="icon3"></i>
+    <div class="login-container">
+        <h2>Дашборд ментора</h2>
+        <p>Добро пожаловать, ментор! Управляйте студентами и курсами (функционал в разработке).</p>
+        <button><i class="fas fa-users"></i> Управление студентами</button>
+    </div>
+</body>
+</html>

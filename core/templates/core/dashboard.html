@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head><title>Дашборд</title></head>
+<body>
+    <h1>Добро пожаловать, {{ user.FIO }}!</h1>
+    {% if message %}
+        <p>{{ message }}</p>
+    {% endif %}
+    <form method="post" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button type="submit">Выйти</button>
+    </form>
+</body>
+</html>

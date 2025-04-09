@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Вход в Megalab</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+</head>
+<body>
+    <div class="header">
+        <div class="logo-text">
+            <img src="{% static 'images/megalab_logo1.svg' %}" alt="Megalab Logo">
+            <p>Образовательная платформа Megalab</p>
+        </div>
+        {% if user.is_authenticated %}
+            <form method="post" action="{% url 'logout' %}">
+                {% csrf_token %}
+                <button type="submit" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Выйти</button>
+            </form>
+        {% endif %}
+    </div>
+    <i class="fas fa-book background-icon" id="icon1"></i>
+    <i class="fas fa-graduation-cap background-icon" id="icon2"></i>
+    <i class="fas fa-code background-icon" id="icon3"></i>
+    <!-- Контейнер для уведомлений (вверху страницы) -->
+    <div class="toast-container"></div>
+    <div class="login-container">
+        <h2>Вход в Megalab</h2>
+        <p class="info">Пароли выдаются администрацией. Обратитесь за доступом.</p>
+        {% if form.errors %}
+            <ul class="errorlist" style="display: none;"> <!-- Скрываем стандартные ошибки -->
+                {% for error in form.non_field_errors %}
+                    <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+        <form method="post" id="login-form" action="{% url 'login' %}">
+            {% csrf_token %}
+            <div class="input-group">
+                <label for="{{ form.username.id_for_label }}">Логин:</label>
+                {{ form.username }}
+            </div>
+            <div class="input-group password-input">
+                <label for="{{ form.password.id_for_label }}">Пароль:</label>
+                {{ form.password }}
+                <span class="toggle-password" onclick="togglePassword()">
+                    <i class="fas fa-lock"></i>
+                </span>
+            </div>
+            <button type="submit" id="submit-btn">
+                <i class="fas fa-sign-in-alt"></i> Войти
+                <span class="spinner"></span>
+            </button>
+            <p style="margin-top: 15px; font-size: 14px; color: #7f8c8d;">
+                <a href="#" style="color: #6b2ea9; text-decoration: none;">Забыли пароль?</a> (Обратитесь к администратору)
+            </p>
+        </form>
+    </div>
+    <script>
+        function togglePassword() {
+            const password = document.querySelector('input[name="password"]');
+            const toggle = document.querySelector('.toggle-password i');
+            if (password.type === "password") {
+                password.type = "text";
+                toggle.classList.remove('fa-lock');
+                toggle.classList.add('fa-unlock');
+            } else {
+                password.type = "password";
+                toggle.classList.remove('fa-unlock');
+                toggle.classList.add('fa-lock');
+            }
+        }
+
+        // Функция для показа уведомлений
+        function showToast(message, type = 'error') {
+            const toastContainer = document.querySelector('.toast-container');
+            const toast = document.createElement('div');
+            toast.classList.add('toast', type);
+            toast.innerText = message;
+            toastContainer.appendChild(toast);
+
+            // Анимация появления (сверху вниз)
+            setTimeout(() => {
+                toast.classList.add('show');
+            }, 100);
+
+            // Удаление уведомления через 3 секунды
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => {
+                    toast.remove();
+                }, 300);
+            }, 3000);
+        }
+
+        document.getElementById('login-form').addEventListener('submit', async function(e) {
+            e.preventDefault(); // Отменяем стандартную отправку формы
+            const submitBtn = document.getElementById('submit-btn');
+            const spinner = document.querySelector('.spinner');
+            submitBtn.disabled = true;
+            spinner.style.display = 'inline-block'; // Показываем спиннер
+
+            try {
+                const response = await fetch(this.action, {
+                    method: 'POST',
+                    body: new FormData(this),
+                    headers: {
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    },
+                    credentials: 'same-origin'
+                });
+
+                if (response.redirected) {
+                    showToast('Успешный вход! Перенаправляем...', 'success');
+                    setTimeout(() => {
+                        window.location.href = response.url;
+                    }, 1000); // Задержка для показа уведомления
+                } else if (!response.ok) {
+                    const errorText = await response.text();
+                    const errorMessages = errorText.match(/<li[^>]*>(.*?)<\/li>/g) || ['Ошибка входа'];
+                    errorMessages.forEach(msg => {
+                        const message = msg.replace(/<\/?li[^>]*>/g, '').trim() || 'Неверный логин или пароль';
+                        showToast(message, 'error');
+                    });
+                }
+            } catch (error) {
+                showToast(error.message || 'Произошла ошибка при входе', 'error');
+            } finally {
+                submitBtn.disabled = false;
+                spinner.style.display = 'none'; // Скрываем спиннер
+            }
+        });
+    </script>
+</body>
+</html>
